@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Alexia - Jardín Mágico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #0b0f19;
+            --bg-bottom: #1a1b41;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+            font-family: 'Outfit', sans-serif;
+            color: #ffffff;
+            cursor: pointer; /* Indicar que la pantalla es interactiva */
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .moon {
+            position: absolute;
+            top: 8%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #fdf8e1 40%, transparent 100%);
+            box-shadow: 0 0 60px rgba(255, 255, 255, 0.4), 0 0 120px rgba(255, 255, 255, 0.2);
+            z-index: 2;
+            animation: pulse-moon 6s ease-in-out infinite alternate;
+        }
+
+        .glass-panel {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            padding: 30px 50px;
+            border-radius: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 35px 55px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, #d8b4fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(216, 180, 254, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: 300;
+            color: #e2e8f0;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 28px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .magic-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(216, 180, 254, 0.5);
+            transform: translateY(-2px);
+            border-color: rgba(216, 180, 254, 0.6);
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #f8fafc;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hidden-message.show {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .garden {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .flower {
+            position: absolute;
+            bottom: -20px;
+            transform-origin: bottom center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: sway var(--speed) ease-in-out infinite alternate;
+            animation-delay: var(--delay);
+            transition: all 0.5s ease;
+        }
+
+        .flower.new-flower {
+            animation: grow 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, sway var(--speed) ease-in-out infinite alternate;
+            transform-origin: bottom center;
+            transform: scale(0);
+        }
+
+        @keyframes grow {
+            0% { transform: scale(0) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .stem {
+            width: 6px;
+            height: var(--stem-height);
+            background: linear-gradient(90deg, #0f5132, #198754, #0f5132);
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(25, 135, 84, 0.5);
+            position: relative;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 30px;
+            height: 15px;
+            background: #198754;
+            border-radius: 0 15px 0 15px;
+            top: 50%;
+            box-shadow: 0 0 8px rgba(25, 135, 84, 0.6);
+        }
+
+        .leaf.left {
+            right: 4px;
+            transform-origin: right bottom;
+            transform: rotate(-30deg);
+        }
+
+        .leaf.right {
+            left: 4px;
+            transform-origin: left bottom;
+            transform: rotate(30deg);
+            top: 60%;
+        }
+
+        .bloom {
+            width: var(--size);
+            height: var(--size);
+            position: relative;
+            margin-bottom: -5px;
+            z-index: 2;
+            filter: drop-shadow(0 0 20px var(--glow-color));
+            animation: breathe 4s ease-in-out infinite alternate;
+        }
+
+        .petal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 35%;
+            background: radial-gradient(circle at 50% 100%, var(--core-color), var(--petal-color));
+            border-radius: 50px 50px 0 0;
+            transform-origin: bottom center;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30%;
+            height: 30%;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #fff, inset 0 0 5px #f59e0b;
+            z-index: 10;
+        }
+
+        .ground-glow {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25%;
+            background: linear-gradient(0deg, rgba(25, 135, 84, 0.15) 0%, transparent 100%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 30;
+            animation: fade-pulse 3s infinite;
+        }
+
+        @keyframes pulse-moon {
+            from { box-shadow: 0 0 40px rgba(255, 255, 255, 0.3), 0 0 80px rgba(255, 255, 255, 0.1); }
+            to { box-shadow: 0 0 60px rgba(255, 255, 255, 0.5), 0 0 120px rgba(255, 255, 255, 0.2); }
+        }
+
+        @keyframes sway {
+            from { transform: rotate(calc(var(--tilt) - 5deg)); }
+            to { transform: rotate(calc(var(--tilt) + 5deg)); }
+        }
+
+        @keyframes breathe {
+            from { transform: scale(0.95); }
+            to { transform: scale(1.05); }
+        }
+
+        @keyframes fade-pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel {
+                top: 10%;
+                padding: 20px 30px;
+            }
+            .moon {
+                width: 80px;
+                height: 80px;
+                top: 5%;
+                right: 5%;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Música de fondo (Chopin Nocturne) -->
+    <audio id="bg-music" loop>
+        <source src="https://upload.wikimedia.org/wikipedia/commons/2/23/Chopin_-_Nocturne_Op_9_No_2_%28E_Flat_Major%29.ogg" type="audio/ogg">
+    </audio>
+
+    <div class="moon"></div>
+    <canvas id="canvas-container"></canvas>
+    
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">Un jardín de luz que brilla solo para ti en la oscuridad.</p>
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+        
+        <div class="hidden-message" id="secret-message">
+            "Alexia,<br><br>
+            Eres la luz que ilumina incluso mis noches más oscuras. Este jardín mágico fue creado para recordarte lo hermosa que eres y lo especial que es tenerte en mi vida.<br><br>
+            Cada flor que brilla, cada estrella que cruza el cielo, no se compara con la magia de tu sonrisa. Nunca olvides lo maravillosa que eres.<br><br>
+            Te quiero muchísimo."
+        </div>
+    </div>
+
+    <div class="ground-glow"></div>
+    <div class="garden" id="garden"></div>
+    <div class="hint">Haz clic en cualquier parte de la pantalla para plantar una flor</div>
+
+    <script>
+        // --- Interacciones (Audio y Mensaje) ---
+        let audioPlayed = false;
+        
+        document.body.addEventListener('click', function() {
+            if (!audioPlayed) {
+                const audio = document.getElementById('bg-music');
+                audio.volume = 0.4;
+                audio.play().catch(e => console.log("Audio autoplay prevenido por el navegador"));
+                audioPlayed = true;
+                
+                // Ocultar hint
+                document.querySelector('.hint').style.display = 'none';
+            }
+        });
+
+        function revealMessage(event) {
+            event.stopPropagation(); // Evitar que el clic plante una flor directamente detrás del panel
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+            
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+                
+                // Activar audio si no se ha activado
+                if (!audioPlayed) {
+                    const audio = document.getElementById('bg-music');
+                    audio.volume = 0.4;
+                    audio.play();
+                    audioPlayed = true;
+                    document.querySelector('.hint').style.display = 'none';
+                }
+            }
+        }
+
+        // --- Canvas Animation (Stars, Fireflies & Shooting Stars) ---
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let shootingStars = [];
+        let mouse = { x: null, y: null };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+            
+            // Paralaje suave en el panel
+            const panel = document.getElementById('panel');
+            const moveX = (e.x - width/2) * 0.015;
+            const moveY = (e.y - height/2) * 0.015;
+            panel.style.transform = `translate(calc(-50% + ${moveX}px), ${moveY}px)`;
+        });
+        
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+            const panel = document.getElementById('panel');
+            panel.style.transform = `translate(-50%, 0px)`;
+        });
+
+        class Particle {
+            constructor(isFirefly = false) {
+                this.isFirefly = isFirefly;
+                this.x = Math.random() * width;
+                this.y = isFirefly ? height - Math.random() * (height * 0.6) : Math.random() * height;
+                this.size = isFirefly ? Math.random() * 2 + 1 : Math.random() * 1.5;
+                this.speedX = isFirefly ? (Math.random() - 0.5) * 1.5 : (Math.random() - 0.5) * 0.2;
+                this.speedY = isFirefly ? (Math.random() - 0.5) * 1.5 - 0.5 : (Math.random() - 0.5) * 0.2;
+                this.color = isFirefly ? `hsla(${Math.random() * 60 + 40}, 100%, 75%, ${Math.random() * 0.8 + 0.2})` : `rgba(255, 255, 255, ${Math.random() * 0.8})`;
+                this.glow = isFirefly ? 12 : 2;
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Efecto mariposa para luciérnagas
+                this.flutterSpeed = isFirefly ? Math.random() * 0.1 + 0.05 : 0;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.isFirefly) {
+                    this.angle += this.flutterSpeed;
+                    this.x += Math.sin(this.angle) * 1.2; // Vuelo ondulante tipo mariposa
+                    this.y += Math.cos(this.angle * 0.5) * 0.5;
+                    this.size = Math.sin(this.angle * 0.5) * 1.5 + 2;
+                    
+                    // Interacción con ratón: se apartan
+                    if (mouse.x != null) {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 120) {
+                            this.x -= dx * 0.03;
+                            this.y -= dy * 0.03;
+                        }
+                    }
+                }
+
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height && this.isFirefly) this.y = height - 10;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = this.glow;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 0; // reset
+            }
+        }
+
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.length = Math.random() * 80 + 20;
+                this.speed = Math.random() * 10 + 15;
+                this.angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); // Diagonal
+                this.active = false;
+                this.opacity = 1;
+            }
+
+            spawn() {
+                this.reset();
+                this.active = true;
+            }
+
+            update() {
+                if (!this.active) return;
+                this.x -= Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.opacity -= 0.015;
+
+                if (this.opacity <= 0 || this.x < 0 || this.y > height) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + Math.cos(this.angle) * this.length, this.y - Math.sin(this.angle) * this.length);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = "white";
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            shootingStars = [new ShootingStar(), new ShootingStar()];
+            
+            // Stars
+            for(let i=0; i<150; i++) particles.push(new Particle(false));
+            // Butterfly/Fireflies
+            for(let i=0; i<60; i++) particles.push(new Particle(true));
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            shootingStars.forEach(star => {
+                if(star.active) {
+                    star.update();
+                    star.draw();
+                } else if(Math.random() < 0.005) { // 0.5% chance per frame per star
+                    star.spawn();
+                }
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        initParticles();
+        animateCanvas();
+
+        // --- Flowers Generator ---
+        const garden = document.getElementById('garden');
+        
+        const palettes = [
+            { petal: '#ff6b6b', core: '#ffe0df', glow: 'rgba(255,107,107,0.8)' },  // Red/Pink
+            { petal: '#a78bfa', core: '#ddd6fe', glow: 'rgba(167,139,250,0.8)' },  // Purple
+            { petal: '#60a5fa', core: '#bfdbfe', glow: 'rgba(96,165,250,0.8)' },   // Blue
+            { petal: '#f472b6', core: '#fbcfe8', glow: 'rgba(244,114,182,0.8)' },  // Pink
+            { petal: '#fcd34d', core: '#fef3c7', glow: 'rgba(252,211,77,0.8)' },   // Yellow
+            { petal: '#2dd4bf', core: '#ccfbf1', glow: 'rgba(45,212,191,0.8)' }    // Teal
+        ];
+
+        function createFlower(leftPercentage, isNew = false) {
+            const flower = document.createElement('div');
+            flower.className = 'flower';
+            if (isNew) flower.classList.add('new-flower');
+            
+            // Random properties
+            const colorPair = palettes[Math.floor(Math.random() * palettes.length)];
+            const size = Math.random() * 40 + 60; // 60 to 100px
+            const stemHeight = Math.random() * 150 + 100; // 100 to 250px
+            const delay = Math.random() * -5;
+            const speed = Math.random() * 3 + 4; // 4 to 7s
+            const tilt = (Math.random() - 0.5) * 20; // -10 to 10deg
+            const zIndex = Math.floor(Math.random() * 10) + 10;
+
+            flower.style.left = `${leftPercentage}%`;
+            flower.style.zIndex = zIndex;
+            flower.style.setProperty('--size', `${size}px`);
+            flower.style.setProperty('--stem-height', `${stemHeight}px`);
+            flower.style.setProperty('--delay', `${delay}s`);
+            flower.style.setProperty('--speed', `${speed}s`);
+            flower.style.setProperty('--tilt', `${tilt}deg`);
+            flower.style.setProperty('--glow-color', colorPair.glow);
+
+            // Bloom
+            const bloom = document.createElement('div');
+            bloom.className = 'bloom';
+            
+            const numPetals = 8;
+            for(let p=0; p<numPetals; p++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.style.transform = `translate(-50%, -100%) rotate(${(360/numPetals) * p}deg)`;
+                petal.style.setProperty('--petal-color', colorPair.petal);
+                petal.style.setProperty('--core-color', colorPair.core);
+                bloom.appendChild(petal);
+            }
+            
+            const center = document.createElement('div');
+            center.className = 'center';
+            bloom.appendChild(center);
+
+            // Stem & Leaves
+            const stem = document.createElement('div');
+            stem.className = 'stem';
+            
+            if(Math.random() > 0.3) {
+                const leafL = document.createElement('div');
+                leafL.className = 'leaf left';
+                stem.appendChild(leafL);
+            }
+            if(Math.random() > 0.3) {
+                const leafR = document.createElement('div');
+                leafR.className = 'leaf right';
+                stem.appendChild(leafR);
+            }
+
+            flower.appendChild(bloom);
+            flower.appendChild(stem);
+            garden.appendChild(flower);
+        }
+
+        // Flores iniciales
+        const numInitialFlowers = window.innerWidth < 768 ? 10 : 18;
+        for (let i = 0; i < numInitialFlowers; i++) {
+            createFlower(Math.random() * 100);
+        }
+
+        // Interacción: Plantar flores al hacer clic
+        document.body.addEventListener('click', function(e) {
+            // No plantar flor si hacemos clic en el panel
+            if (e.target.closest('.glass-panel')) return;
+            
+            const rect = garden.getBoundingClientRect();
+            // Calcular porcentaje horizontal basado en el clic
+            const leftPercentage = (e.clientX / window.innerWidth) * 100;
+            
+            // Crear una nueva flor animada
+            createFlower(leftPercentage, true);
+        });
+
+    </script>
+</body>
+</html>

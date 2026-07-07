@@ -85,6 +85,7 @@
             margin-bottom: 10px;
             background: linear-gradient(to right, #fff, #d8b4fe);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 30px rgba(216, 180, 254, 0.3);
             letter-spacing: 2px;
@@ -288,14 +289,58 @@
 
         @media (max-width: 768px) {
             .glass-panel {
-                top: 10%;
-                padding: 20px 30px;
+                top: 8%;
+                padding: 20px 25px;
+                width: 92%;
             }
             .moon {
-                width: 80px;
-                height: 80px;
+                width: 70px;
+                height: 70px;
                 top: 5%;
                 right: 5%;
+            }
+            .hidden-message {
+                font-size: 1rem;
+            }
+            .hidden-message.show {
+                max-height: 600px;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .glass-panel {
+                top: 5%;
+                padding: 15px 20px;
+                width: 95%;
+                border-radius: 16px;
+            }
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 5px;
+            }
+            .subtitle {
+                font-size: 0.85rem;
+                margin-bottom: 15px;
+            }
+            .hidden-message {
+                font-size: 0.95rem;
+                line-height: 1.4;
+            }
+            .hidden-message.show {
+                max-height: 800px; /* Allow more space for wrapped text on narrow screens */
+                margin-top: 15px;
+                padding-top: 15px;
+            }
+            .magic-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
             }
         }
     </style>

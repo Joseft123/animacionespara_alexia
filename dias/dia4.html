@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día 4 - Bosque de Otoño para Alexia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #1a0b16;
+            --bg-mid1: #4a192c;
+            --bg-mid2: #8c2727;
+            --bg-bot: #b84c16;
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh; overflow: hidden;
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-mid1), var(--bg-mid2), var(--bg-bot));
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+        }
+
+        #canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(25, 10, 5, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 35px 50px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.15);
+            text-align: center; color: #fff; max-width: 90%; width: 550px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05);
+            z-index: 20; transition: transform 0.2s ease;
+        }
+        
+        .glass-panel h1 { 
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; 
+            color: #ffb347; text-shadow: 0 0 15px rgba(255, 179, 71, 0.3);
+        }
+        
+        .glass-panel p.subtitle { 
+            font-size: 1.1rem; line-height: 1.5; color: #f5d0a9; font-weight: 300; margin-bottom: 20px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 179, 71, 0.4);
+            color: #ffb347;
+            padding: 10px 25px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .magic-btn:hover {
+            background: rgba(255, 179, 71, 0.2);
+            box-shadow: 0 0 20px rgba(255, 179, 71, 0.5);
+            transform: translateY(-2px);
+            border-color: #ffb347;
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #ffe8d6;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hidden-message.show {
+            max-height: 50vh;
+            overflow-y: auto;
+            opacity: 1;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 179, 71, 0.2);
+        }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            color: #fff; text-decoration: none; font-weight: 500;
+            background: rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+        .ground {
+            position: absolute; bottom: 0; width: 100%; height: 60px;
+            background: #2a1508;
+            border-top: 5px solid #3e2211;
+            z-index: 10;
+        }
+
+        /* --- Hedgehog CSS Mejorado --- */
+        .hedgehog-container {
+            position: absolute;
+            bottom: 60px; /* Above the ground */
+            left: 50%;
+            width: 130px;
+            height: 80px;
+            transform: translateX(-50%);
+            z-index: 15;
+            cursor: pointer;
+            filter: drop-shadow(0 5px 6px rgba(0,0,0,0.4));
+        }
+
+        .body-spikes {
+            position: absolute;
+            bottom: 12px; left: 10px;
+            width: 100px;
+            height: 65px;
+            background: #5c3a21; /* Rich dark brown */
+            border-radius: 60% 40% 40% 20% / 70% 60% 40% 30%;
+            box-shadow: inset -5px -10px 15px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            /* Give it a slight spiky texture feeling */
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
+        }
+
+        /* Fake spikes sticking out */
+        .spike {
+            position: absolute;
+            background: #4a2c16;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            border-radius: 2px;
+            transition: opacity 0.3s ease;
+        }
+        .s1 { top: -8px; left: 20px; width: 15px; height: 20px; transform: rotate(-20deg); }
+        .s2 { top: -12px; left: 45px; width: 18px; height: 25px; transform: rotate(5deg); }
+        .s3 { top: -5px; left: 70px; width: 16px; height: 20px; transform: rotate(30deg); }
+        .s4 { top: 20px; left: -8px; width: 14px; height: 18px; transform: rotate(-60deg); }
+        .s5 { top: 40px; right: -5px; width: 12px; height: 15px; transform: rotate(60deg); }
+
+        .head {
+            position: absolute;
+            bottom: 12px;
+            right: -15px;
+            width: 55px;
+            height: 45px;
+            background: linear-gradient(135deg, #f3c2b1, #e3a38d); /* Soft skin color */
+            border-radius: 50% 60% 50% 40% / 60% 60% 40% 40%; 
+            transform-origin: center left;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.15);
+        }
+
+        .eye {
+            position: absolute;
+            top: 15px; right: 20px;
+            width: 8px; height: 8px;
+            background: #1a0f0a;
+            border-radius: 50%;
+        }
+        .eye::after {
+            content: ''; position: absolute;
+            top: 1px; right: 2px;
+            width: 3px; height: 3px;
+            background: #fff; border-radius: 50%;
+        }
+
+        .nose {
+            position: absolute;
+            top: 20px; right: -4px;
+            width: 10px; height: 8px;
+            background: #1a0f0a;
+            border-radius: 50%;
+        }
+
+        .blush {
+            position: absolute;
+            top: 24px; right: 25px;
+            width: 12px; height: 8px;
+            background: rgba(255, 90, 110, 0.4);
+            border-radius: 50%;
+            filter: blur(1.5px);
+        }
+
+        .ear {
+            position: absolute;
+            top: 0px; right: 35px;
+            width: 15px; height: 15px;
+            background: #e3a38d;
+            border-radius: 50%;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.1);
+        }
+
+        .leg {
+            position: absolute;
+            bottom: 2px;
+            width: 12px; height: 10px;
+            background: #a87661;
+            border-radius: 0 0 10px 10px;
+            transition: opacity 0.2s ease;
+        }
+        .leg.front { right: 15px; }
+        .leg.back { left: 40px; }
+
+        /* Walking Animation */
+        @keyframes walk {
+            0% { transform: translateY(0) rotate(0); }
+            25% { transform: translateY(-4px) rotate(3deg); }
+            50% { transform: translateY(0) rotate(0); }
+            75% { transform: translateY(-4px) rotate(-3deg); }
+            100% { transform: translateY(0) rotate(0); }
+        }
+        .walking {
+            animation: walk 0.35s infinite linear;
+        }
+
+        /* Rolled up (Defensive) State */
+        .hedgehog-container.rolled-up .body-spikes {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            bottom: 5px; left: 25px;
+            box-shadow: inset 0 20px 20px rgba(0,0,0,0.7);
+        }
+        .hedgehog-container.rolled-up .spike {
+            opacity: 0.5; /* Spikes flatten slightly when rolled up */
+        }
+        .hedgehog-container.rolled-up .head {
+            opacity: 0; transform: scale(0.5) rotate(-45deg);
+        }
+        .hedgehog-container.rolled-up .leg {
+            opacity: 0;
+        }
+        
+        .hint {
+            position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.5); font-size: 0.9rem; pointer-events: none;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.9; }
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel { width: 85%; padding: 25px; top: 25%; max-height: 85vh; overflow-y: auto; }
+            .glass-panel h1 { font-size: 2rem; }
+            .glass-panel p.subtitle { font-size: 0.95rem; }
+            .hidden-message.show { max-height: 40vh; }
+        }
+
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">← Volver al Calendario</a>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">El refugio más cálido de todos.</p>
+        
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+        
+        <div class="hidden-message" id="secret-message">
+            "Mi niña hermosa,<br><br>
+            El otoño nos enseña lo hermoso que puede ser dejar ir, y lo cálido que es encontrar un refugio.<br><br>
+            A veces, al igual que este pequeño erizo, podemos tener púas para protegernos del mundo, pero tú tienes el corazón más suave y tierno que he conocido en toda mi vida.<br><br>
+            Gracias por ser mi lugar seguro. Te amo."
+        </div>
+    </div>
+
+    <div class="hint">Mueve el ratón para guiar al erizo. ¡Tócalo para ver qué hace!</div>
+
+    <div class="hedgehog-container" id="hedgehog">
+        <div class="body-spikes">
+            <div class="spike s1"></div>
+            <div class="spike s2"></div>
+            <div class="spike s3"></div>
+            <div class="spike s4"></div>
+            <div class="spike s5"></div>
+        </div>
+        <div class="head">
+            <div class="ear"></div>
+            <div class="eye"></div>
+            <div class="blush"></div>
+            <div class="nose"></div>
+        </div>
+        <div class="leg front"></div>
+        <div class="leg back"></div>
+    </div>
+
+    <div class="ground"></div>
+
+    <script>
+        // --- Interacciones (Botón Mágico) ---
+        function revealMessage(event) {
+            event.stopPropagation();
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+            
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+                document.querySelector('.hint').style.display = 'none'; // hide hint
+            }
+        }
+
+        // --- Hedgehog Logic ---
+        const hh = document.getElementById('hedgehog');
+        let targetX = window.innerWidth / 2;
+        let currentX = window.innerWidth / 2;
+        let isFlipped = false;
+        
+        // Touch or Mouse move
+        function updateTarget(x) {
+            // Keep target inside bounds
+            targetX = Math.max(50, Math.min(window.innerWidth - 50, x));
+        }
+
+        window.addEventListener('mousemove', (e) => updateTarget(e.clientX));
+        window.addEventListener('touchmove', (e) => updateTarget(e.touches[0].clientX));
+
+        hh.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hh.classList.toggle('rolled-up');
+            document.querySelector('.hint').style.display = 'none'; // hide hint
+        });
+
+        function moveHedgehog() {
+            if(!hh.classList.contains('rolled-up')) {
+                const dx = targetX - currentX;
+                
+                // If distance is significant, walk
+                if(Math.abs(dx) > 3) {
+                    currentX += dx * 0.04; // easing speed
+                    hh.classList.add('walking');
+                    
+                    // Determine direction
+                    if(dx < 0 && !isFlipped) isFlipped = true;
+                    if(dx > 0 && isFlipped) isFlipped = false;
+                    
+                    hh.style.left = `${currentX}px`;
+                    // When flipped, scaleX is -1. 
+                    hh.style.transform = `translateX(-50%) scaleX(${isFlipped ? -1 : 1})`;
+                } else {
+                    hh.classList.remove('walking');
+                }
+            } else {
+                // Remove walking animation if rolled up
+                hh.classList.remove('walking');
+            }
+            requestAnimationFrame(moveHedgehog);
+        }
+        moveHedgehog();
+
+        // --- Canvas de Hojas de Otoño ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let leaves = [];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Leaf {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = -50 - Math.random() * height; // Start above screen
+                this.size = Math.random() * 6 + 4;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 1.5 - 0.75;
+                this.angle = Math.random() * 360;
+                this.spin = (Math.random() - 0.5) * 4;
+                // Autumn colors: Red, Orange, Gold
+                const colors = ['#e63946', '#f4a261', '#e9c46a', '#e76f51', '#bc4749', '#a98467'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.swaySpeed = Math.random() * 0.02 + 0.01;
+                this.swayAmount = Math.random() * 1.5 + 0.5;
+            }
+            
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y * this.swaySpeed) * this.swayAmount; // Organic sway
+                this.angle += this.spin;
+
+                if (this.y > height + 20) {
+                    this.y = -20;
+                    this.x = Math.random() * width;
+                }
+                if (this.x > width + 20) this.x = -20;
+                if (this.x < -20) this.x = width + 20;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                
+                // Draw leaf shape (ellipse)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size, this.size / 2.5, 0, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Draw leaf stem
+                ctx.beginPath();
+                ctx.moveTo(-this.size, 0);
+                ctx.lineTo(this.size + 2, 0);
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+        
+        const isMobile = window.innerWidth < 768;
+        const numLeaves = isMobile ? 30 : 60;
+        for(let i=0; i<numLeaves; i++) leaves.push(new Leaf());
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            leaves.forEach(leaf => {
+                leaf.update();
+                leaf.draw();
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día 2 - Girasoles para Alexia</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #ff5e3a;
+            --sky-mid: #ff9966;
+            --sky-bot: #ffde82;
+            --stem-color: #3b5e2b;
+            --petal-light: #FFD700;
+            --petal-dark: #FFA500;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-mid) 40%, var(--sky-bot) 100%);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Sun setting */
+        .sun {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #ffffff 0%, #ffef99 30%, #ff8c00 80%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 150px #ff8c00, 0 0 300px #ffeb3b;
+            animation: pulse-sun 6s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+
+        @keyframes pulse-sun {
+            from {
+                box-shadow: 0 0 150px #ff8c00, 0 0 300px #ffeb3b;
+                filter: brightness(1);
+            }
+
+            to {
+                box-shadow: 0 0 200px #ff8c00, 0 0 400px #ffeb3b;
+                filter: brightness(1.2);
+            }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px 50px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-align: center;
+            color: #5a1f06;
+            max-width: 90%;
+            width: 550px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            z-index: 20;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2), inset 0 0 30px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-panel h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #7c2d12;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-panel p.subtitle {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #7c2d12;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(124, 45, 18, 0.3);
+            color: #7c2d12;
+            padding: 12px 28px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .magic-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+            transform: translateY(-2px);
+            border-color: #ff8c00;
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #431407;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .hidden-message.show {
+            max-height: 50vh;
+            overflow-y: auto;
+            opacity: 1;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(124, 45, 18, 0.2);
+        }
+
+        /* Interactive Fireflies (Pollen/Dust) on Canvas */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: #431407;
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* --- Beautiful Sunflowers --- */
+        .garden {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 35%;
+            background: linear-gradient(to top, #143306, rgba(20, 51, 6, 0.8) 40%, transparent);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .sunflower-container {
+            position: absolute;
+            bottom: -50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: bottom center;
+            animation: sway 7s ease-in-out infinite alternate;
+        }
+
+        @keyframes sway {
+            from {
+                transform: rotate(-3deg);
+            }
+
+            to {
+                transform: rotate(3deg);
+            }
+        }
+
+        .sf-stem {
+            width: 14px;
+            height: 350px;
+            background: linear-gradient(to right, #1f3d14, var(--stem-color), #1f3d14);
+            border-radius: 7px;
+            position: relative;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sf-leaf {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(45deg, #2b4a1b, var(--stem-color));
+            border-radius: 0 30px 0 30px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sf-leaf.left {
+            top: 40%;
+            right: 8px;
+            transform-origin: right bottom;
+            transform: rotate(-30deg);
+        }
+
+        .sf-leaf.right {
+            top: 60%;
+            left: 8px;
+            transform-origin: left bottom;
+            transform: rotate(30deg);
+        }
+
+        .sf-head {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            margin-left: -75px;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+            z-index: 2;
+        }
+
+        .sf-petal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -80px;
+            /* Pointing upwards from center */
+            margin-left: -12.5px;
+            /* Half of width */
+            width: 25px;
+            height: 80px;
+            background: linear-gradient(to top, var(--petal-dark) 0%, var(--petal-light) 80%);
+            border-radius: 50% 50% 20% 20%;
+            transform-origin: center bottom;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 2 layers of petals for fullness */
+        .sf-petal.layer-2 {
+            width: 22px;
+            height: 75px;
+            margin-top: -75px;
+            margin-left: -11px;
+            background: linear-gradient(to top, #e69500 0%, #ffea00 80%);
+            z-index: 1;
+        }
+
+        .sf-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75px;
+            height: 75px;
+            background: radial-gradient(circle, #4a2a12 0%, #2a1608 80%);
+            border-radius: 50%;
+            box-shadow: inset 0 0 15px #0a0502, 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 5px dotted #6b3e1b;
+            z-index: 3;
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel {
+                width: 85%;
+                padding: 30px;
+                top: 30%;
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+
+            .glass-panel h1 {
+                font-size: 2rem;
+            }
+
+            .glass-panel p.subtitle {
+                font-size: 0.95rem;
+            }
+
+            .hidden-message.show {
+                max-height: 40vh;
+            }
+
+            .sun {
+                width: 150px;
+                height: 150px;
+                bottom: 35%;
+            }
+
+            .sf-head {
+                transform: scale(0.7);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back-btn">← Volver al Calendario</a>
+
+    <div class="sun"></div>
+    <canvas id="canvas"></canvas>
+
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">Un atardecer dorado que refleja cariño hacia ti.</p>
+
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+
+        <div class="hidden-message" id="secret-message">
+            "Alexia,<br><br>
+            Los girasoles siempre buscan la luz del sol para brillar, así como mi mirada siempre te busca a ti en cada
+            momento.<br><br>
+            Tú eres mi luz más cálida y mi paisaje favorito. Estar a tu lado hace que cada día se sienta como un
+            atardecer hermoso y lleno de paz.<br><br>
+            Nunca dejes de brillar."
+        </div>
+    </div>
+
+    <div class="garden" id="garden"></div>
+
+    <script>
+        // --- Interacciones (Botón Mágico) ---
+        function revealMessage(event) {
+            event.stopPropagation();
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+            }
+        }
+
+        // --- Generador de Girasoles Detallados ---
+        const garden = document.getElementById('garden');
+        const heads = [];
+        const isMobile = window.innerWidth < 768;
+        const numSunflowers = isMobile ? 6 : 12;
+
+        function createSunflower(leftPercent, scale, zIndex, delay) {
+            const container = document.createElement('div');
+            container.className = 'sunflower-container';
+            container.style.left = `${leftPercent}%`;
+            // Base scale + perspective scaling
+            container.style.transform = `scale(${scale})`;
+            container.style.zIndex = zIndex;
+            container.style.animationDelay = `${delay}s`;
+
+            // Tallo y Hojas
+            const stem = document.createElement('div');
+            stem.className = 'sf-stem';
+
+            const leafL = document.createElement('div');
+            leafL.className = 'sf-leaf left';
+
+            const leafR = document.createElement('div');
+            leafR.className = 'sf-leaf right';
+
+            stem.appendChild(leafL);
+            stem.appendChild(leafR);
+
+            // Cabeza del Girasol
+            const head = document.createElement('div');
+            head.className = 'sf-head';
+
+            // Pétalos - Capa 1 (Fondo)
+            const numPetals1 = 18;
+            for (let i = 0; i < numPetals1; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'sf-petal';
+                petal.style.transform = `rotate(${(360 / numPetals1) * i}deg)`;
+                head.appendChild(petal);
+            }
+
+            // Pétalos - Capa 2 (Frente)
+            const numPetals2 = 18;
+            for (let i = 0; i < numPetals2; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'sf-petal layer-2';
+                // Offset the rotation for fullness
+                petal.style.transform = `rotate(${((360 / numPetals2) * i) + 10}deg)`;
+                head.appendChild(petal);
+            }
+
+            // Centro (Semillas)
+            const center = document.createElement('div');
+            center.className = 'sf-center';
+            head.appendChild(center);
+
+            container.appendChild(stem);
+            container.appendChild(head);
+            garden.appendChild(container);
+
+            return head;
+        }
+
+        // Crear el campo distribuido uniformemente
+        const spacing = 110 / numSunflowers;
+        for (let i = 0; i < numSunflowers; i++) {
+            // Base uniformemente distribuida (-5 a 105)
+            let baseLeft = -5 + (i * spacing);
+            // Añadir ruido orgánico
+            let jitter = (Math.random() - 0.5) * (spacing * 0.7);
+            let left = baseLeft + jitter;
+
+            let scale = isMobile ? (Math.random() * 0.4 + 0.4) : (Math.random() * 0.5 + 0.5);
+            let zIndex = Math.floor(scale * 100);
+            let delay = Math.random() * -10;
+            let head = createSunflower(left, scale, zIndex, delay);
+            heads.push({ el: head, baseX: left });
+        }
+
+        // --- Interactividad: Girasoles siguen el cursor ---
+        window.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Paralaje suave en el panel
+            const panel = document.getElementById('panel');
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.02;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.02;
+            panel.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+
+            // Rotación de los girasoles
+            heads.forEach(headObj => {
+                const head = headObj.el;
+                const rect = head.getBoundingClientRect();
+                const headX = rect.left + rect.width / 2;
+                const headY = rect.top + rect.height / 2;
+
+                // Math.atan2 devuelve ángulo en radianes. 
+                // Convertir a grados.
+                let angle = Math.atan2(mouseY - headY, mouseX - headX) * (180 / Math.PI);
+
+                // Para que la "cara" del girasol (que mira hacia arriba por defecto) apunte al ratón,
+                // sumamos 90 grados al cálculo.
+                let targetAngle = angle + 90;
+
+                // Limitar la rotación para que no se "rompan el cuello"
+                // Queremos que giren máximo 45 grados a la izquierda o derecha
+                if (targetAngle > 45) targetAngle = 45;
+                if (targetAngle < -45) targetAngle = -45;
+
+                head.style.transform = `rotate(${targetAngle}deg)`;
+            });
+        });
+
+        // --- Canvas Polvo de Hadas / Polen ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Pollen {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 4 + 1;
+                this.speedY = -Math.random() * 1.5 - 0.5;
+                this.speedX = Math.random() * 2 - 1;
+                this.opacity = Math.random();
+                this.pulseSpeed = Math.random() * 0.05 + 0.01;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.opacity += Math.sin(Date.now() * this.pulseSpeed) * 0.02;
+
+                if (this.y < 0) this.y = height;
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 220, 100, ${Math.abs(this.opacity)})`;
+                ctx.fill();
+            }
+        }
+
+        const numParticles = isMobile ? 30 : 80;
+        for (let i = 0; i < numParticles; i++) particles.push(new Pollen());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+
+</html>

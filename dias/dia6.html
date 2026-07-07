@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día 6 - Linternas de Papel para Alexia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #0a041f;
+            --bg-mid: #1c0e3a;
+            --bg-bot: #2d1445;
+            --lantern-glow: #ff9d00;
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh; overflow: hidden;
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-mid), var(--bg-bot));
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            cursor: pointer; /* To indicate you can click */
+        }
+
+        #canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(20, 10, 30, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 35px 50px; border-radius: 24px; border: 1px solid rgba(255,157,0,0.15);
+            text-align: center; color: #fff; max-width: 90%; width: 550px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,157,0,0.05);
+            z-index: 20; transition: transform 0.2s ease;
+        }
+        
+        .glass-panel h1 { 
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; 
+            color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .glass-panel p.subtitle { 
+            font-size: 1.1rem; line-height: 1.5; color: #ffeb99; font-weight: 300; margin-bottom: 20px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            color: #ffd700;
+            padding: 10px 25px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .magic-btn:hover {
+            background: rgba(255, 215, 0, 0.15);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+            transform: translateY(-2px);
+            border-color: #ffd700;
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #fff9e6;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .hidden-message.show {
+            max-height: 50vh;
+            overflow-y: auto;
+            opacity: 1;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            color: #fff; text-decoration: none; font-weight: 500;
+            background: rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: rgba(255, 215, 0, 0.2); transform: translateY(-2px); border-color: #ffd700; }
+
+        .hint {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: rgba(255, 215, 0, 0.6); font-size: 0.9rem; pointer-events: none;
+            animation: pulse 3s infinite; text-shadow: 0 0 10px rgba(255,215,0,0.4);
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.9; }
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel { width: 85%; padding: 25px; max-height: 85vh; overflow-y: auto; }
+            .glass-panel h1 { font-size: 2rem; }
+            .glass-panel p.subtitle { font-size: 0.95rem; }
+            .hidden-message.show { max-height: 40vh; }
+        }
+
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">← Volver al Calendario</a>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">Mil deseos en el cielo.</p>
+        
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+        
+        <div class="hidden-message" id="secret-message">
+            "Mi dulce Alexia,<br><br>
+            Dicen que lanzar una linterna al cielo es soltar un deseo al universo esperando que se haga realidad.<br><br>
+            Cada una de las luces que ves aquí representa un deseo que tengo para nosotros, una sonrisa que quiero provocarte o un momento feliz que nos falta por vivir.<br><br>
+            Pero mi mayor deseo ya se cumplió el día en que llegaste a mi vida."
+        </div>
+    </div>
+
+    <div class="hint">Toca cualquier parte de la pantalla para lanzar un deseo...</div>
+
+    <script>
+        // --- Interacciones (Botón Mágico) ---
+        function revealMessage(event) {
+            event.stopPropagation();
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+            
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+                document.querySelector('.hint').style.display = 'none';
+            }
+        }
+
+        // --- Canvas de Linternas ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let lanterns = [];
+        let stars = [];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        }
+        window.addEventListener('resize', resize);
+        
+        // Click to spawn a lantern
+        window.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A' && e.target.id !== 'panel' && !document.getElementById('panel').contains(e.target)) {
+                spawnLantern(e.clientX, e.clientY);
+            }
+        });
+        
+        // Touch to spawn a lantern
+        window.addEventListener('touchstart', function(e) {
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A' && e.target.id !== 'panel' && !document.getElementById('panel').contains(e.target)) {
+                spawnLantern(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 1.5;
+                this.opacity = Math.random();
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+            }
+            draw() {
+                this.opacity += this.twinkleSpeed;
+                const alpha = (Math.sin(this.opacity) + 1) / 2 * 0.8;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fill();
+            }
+        }
+
+        class Lantern {
+            constructor(x, y, manual = false) {
+                this.x = x !== undefined ? x : Math.random() * width;
+                this.y = y !== undefined ? y : height + Math.random() * 300;
+                
+                // Manual lanterns (clicked) start bigger and closer
+                this.size = manual ? (Math.random() * 10 + 20) : (Math.random() * 15 + 10);
+                this.speedY = manual ? (Math.random() * 1 + 1.5) : (Math.random() * 0.8 + 0.4);
+                this.speedX = (Math.random() - 0.5) * 0.6;
+                this.sway = Math.random() * 0.015 + 0.005;
+                this.swayOffset = Math.random() * Math.PI * 2;
+                
+                this.opacity = manual ? 0 : Math.random(); 
+                this.fadeSpeed = 0.02;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX + Math.sin(this.y * this.sway + this.swayOffset) * 0.8;
+                
+                if (this.opacity < 1) this.opacity += this.fadeSpeed;
+                
+                // Scale down slightly as it goes up
+                if (this.size > 5) {
+                    this.size -= 0.01;
+                }
+
+                // Reset if it goes way above the screen
+                if (this.y < -100) {
+                    this.y = height + Math.random() * 200;
+                    this.x = Math.random() * width;
+                    this.opacity = 0;
+                    this.size = Math.random() * 15 + 10;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Glow
+                ctx.shadowBlur = this.size;
+                ctx.shadowColor = `rgba(255, 150, 0, ${this.opacity})`;
+                
+                // Lantern Body
+                ctx.beginPath();
+                ctx.moveTo(-this.size/2, -this.size);
+                ctx.quadraticCurveTo(0, -this.size - 5, this.size/2, -this.size);
+                ctx.lineTo(this.size/2.5, this.size);
+                ctx.lineTo(-this.size/2.5, this.size);
+                ctx.closePath();
+                
+                let grad = ctx.createLinearGradient(0, this.size, 0, -this.size);
+                grad.addColorStop(0, `rgba(255, 80, 0, ${this.opacity})`);
+                grad.addColorStop(1, `rgba(255, 200, 50, ${this.opacity})`);
+                
+                ctx.fillStyle = grad;
+                ctx.fill();
+                
+                // Inner Flame
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#fff';
+                ctx.beginPath();
+                ctx.arc(0, this.size - 3, this.size/4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            const numStars = (width * height) / 2000;
+            for (let i = 0; i < numStars; i++) stars.push(new Star());
+        }
+
+        function initLanterns() {
+            lanterns = [];
+            const numLanterns = window.innerWidth < 768 ? 20 : 40;
+            for (let i = 0; i < numLanterns; i++) {
+                lanterns.push(new Lantern());
+            }
+        }
+
+        function spawnLantern(x, y) {
+            lanterns.push(new Lantern(x, y, true));
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            stars.forEach(s => s.draw());
+            
+            lanterns.forEach(l => {
+                l.update();
+                l.draw();
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        resize();
+        initLanterns();
+        animateCanvas();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día 5 - Océano Mágico para Alexia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #000b18;
+            --bg-mid: #001a33;
+            --bg-bot: #00334d;
+            --highlight: #00ffff;
+            --highlight-dim: rgba(0, 255, 255, 0.4);
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh; overflow: hidden;
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-mid), var(--bg-bot));
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            cursor: crosshair; /* Helps feel like interacting with water */
+        }
+
+        #canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 15, 30, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 35px 50px; border-radius: 24px; border: 1px solid rgba(0,255,255,0.15);
+            text-align: center; color: #fff; max-width: 90%; width: 550px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,255,255,0.05);
+            z-index: 20; transition: transform 0.2s ease;
+        }
+        
+        .glass-panel h1 { 
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; 
+            color: var(--highlight); text-shadow: 0 0 15px var(--highlight-dim);
+        }
+        
+        .glass-panel p.subtitle { 
+            font-size: 1.1rem; line-height: 1.5; color: #b3e6ff; font-weight: 300; margin-bottom: 20px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--highlight-dim);
+            color: var(--highlight);
+            padding: 10px 25px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .magic-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            box-shadow: 0 0 25px var(--highlight-dim);
+            transform: translateY(-2px);
+            border-color: var(--highlight);
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #e6f7ff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .hidden-message.show {
+            max-height: 50vh;
+            overflow-y: auto;
+            opacity: 1;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--highlight-dim);
+        }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            color: #fff; text-decoration: none; font-weight: 500;
+            background: rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: rgba(0, 255, 255, 0.2); transform: translateY(-2px); border-color: var(--highlight); }
+
+        .hint {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: rgba(0, 255, 255, 0.6); font-size: 0.9rem; pointer-events: none;
+            animation: pulse 3s infinite; text-shadow: 0 0 10px rgba(0,255,255,0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.9; }
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel { width: 85%; padding: 25px; max-height: 85vh; overflow-y: auto; }
+            .glass-panel h1 { font-size: 2rem; }
+            .glass-panel p.subtitle { font-size: 0.95rem; }
+            .hidden-message.show { max-height: 40vh; }
+        }
+
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">← Volver al Calendario</a>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">La luz en mis profundidades.</p>
+        
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+        
+        <div class="hidden-message" id="secret-message">
+            "Mi luz,<br><br>
+            Incluso en los lugares más oscuros, hay maravillas que brillan con luz propia. Así eres tú en mi vida.<br><br>
+            Al igual que este océano mágico reacciona a tu tacto, mi corazón se enciende cada vez que estás cerca. Eres mi calma en la marea y la luz que me guía.<br><br>
+            Nunca dudes de la inmensa magia y luz que irradias."
+        </div>
+    </div>
+
+    <div class="hint">Desliza o mueve tu dedo por la pantalla para hacer brillar el agua...</div>
+
+    <script>
+        // --- Interacciones (Botón Mágico) ---
+        function revealMessage(event) {
+            event.stopPropagation();
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+            
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+                document.querySelector('.hint').style.display = 'none';
+            }
+        }
+
+        // --- Canvas de Bioluminiscencia ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        
+        const mouse = { x: null, y: null, radius: window.innerWidth < 768 ? 100 : 150 };
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.clientX;
+            mouse.y = event.clientY;
+        });
+
+        window.addEventListener('touchmove', function(event) {
+            mouse.x = event.touches[0].clientX;
+            mouse.y = event.touches[0].clientY;
+        });
+
+        window.addEventListener('mouseout', function() {
+            mouse.x = null;
+            mouse.y = null;
+        });
+        window.addEventListener('touchend', function() {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        }
+        window.addEventListener('resize', resize);
+        
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.baseSize = Math.random() * 1.5 + 0.5;
+                this.size = this.baseSize;
+                this.baseColor = `rgba(0, 255, 255, 0.1)`;
+                this.glowColor = `rgba(150, 255, 255, 1)`;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.isGlowing = false;
+                this.glowIntensity = 0;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Wrap around edges
+                if (this.x > width) this.x = 0;
+                if (this.x < 0) this.x = width;
+                if (this.y > height) this.y = 0;
+                if (this.y < 0) this.y = height;
+
+                // Interactive glow distance check
+                if (mouse.x !== null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        let force = (mouse.radius - distance) / mouse.radius;
+                        this.size = this.baseSize + force * 4;
+                        this.glowIntensity = force;
+                        this.isGlowing = true;
+                    } else {
+                        if (this.size > this.baseSize) this.size -= 0.2;
+                        this.glowIntensity -= 0.05;
+                        if (this.glowIntensity <= 0) {
+                            this.glowIntensity = 0;
+                            this.isGlowing = false;
+                        }
+                    }
+                } else {
+                    if (this.size > this.baseSize) this.size -= 0.1;
+                    this.glowIntensity -= 0.02;
+                    if (this.glowIntensity <= 0) {
+                        this.glowIntensity = 0;
+                        this.isGlowing = false;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                
+                if (this.isGlowing) {
+                    ctx.fillStyle = `rgba(100, 255, 255, ${0.1 + this.glowIntensity * 0.9})`;
+                    ctx.shadowBlur = 10 * this.glowIntensity;
+                    ctx.shadowColor = '#00ffff';
+                } else {
+                    ctx.fillStyle = this.baseColor;
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const numParticles = (width * height) / 3000; // Density
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateCanvas() {
+            // Slight trails effect instead of clearRect
+            ctx.fillStyle = 'rgba(0, 11, 24, 0.2)'; 
+            ctx.fillRect(0, 0, width, height);
+            
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        resize();
+        animateCanvas();
+
+    </script>
+</body>
+</html>

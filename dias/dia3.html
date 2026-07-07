@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día 3 - Constelaciones para Alexia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #080a1a;
+            --sky-bot: #1b163d;
+            --star-glow: #e2e8f0;
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh; overflow: hidden;
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bot) 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+        }
+        
+        #canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+        }
+        
+        /* Glass Panel */
+        .glass-panel {
+            position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 40, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 35px 50px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; color: #fff; max-width: 90%; width: 550px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.05);
+            z-index: 20; transition: transform 0.3s ease;
+        }
+        
+        .glass-panel h1 { 
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; 
+            color: #d8b4fe; text-shadow: 0 0 15px rgba(216, 180, 254, 0.4);
+        }
+        
+        .glass-panel p.subtitle { 
+            font-size: 1.1rem; line-height: 1.5; color: #e2e8f0; font-weight: 300; margin-bottom: 20px;
+        }
+
+        /* Botón Mágico */
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(216, 180, 254, 0.4);
+            color: #fff;
+            padding: 10px 25px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .magic-btn:hover {
+            background: rgba(216, 180, 254, 0.2);
+            box-shadow: 0 0 20px rgba(216, 180, 254, 0.5);
+            transform: translateY(-2px);
+            border-color: #d8b4fe;
+        }
+
+        /* Mensaje Oculto */
+        .hidden-message {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #f8fafc;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hidden-message.show {
+            max-height: 50vh;
+            overflow-y: auto;
+            opacity: 1;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            color: #fff; text-decoration: none; font-weight: 500;
+            background: rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+        .hint {
+            position: absolute;
+            top: 20px; right: 20px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            z-index: 10;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.9; }
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel { width: 85%; padding: 25px; bottom: 5%; max-height: 85vh; overflow-y: auto; }
+            .glass-panel h1 { font-size: 2rem; }
+            .glass-panel p.subtitle { font-size: 0.95rem; }
+            .hidden-message.show { max-height: 40vh; }
+            .hint { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">← Volver al Calendario</a>
+    <div class="hint">Mira el cielo nocturno...</div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div class="glass-panel" id="panel">
+        <h1>Para Alexia</h1>
+        <p class="subtitle">Bajo el mismo cielo estrellado.</p>
+        
+        <button class="magic-btn" id="reveal-btn" onclick="revealMessage(event)">Leer mi corazón</button>
+        
+        <div class="hidden-message" id="secret-message">
+            "Mi hermosa Alexia,<br><br>
+            Dicen que si miras las estrellas con suficiente atención, puedes encontrar aquello que más amas dibujado en el cielo.<br><br>
+            Al ver estas constelaciones solo puedo pensar en ti, y me pareció perfecto encontrar a Hello Kitty escondida entre las estrellas, igual que tú llenas mi vida de ternura y detalles preciosos.<br><br>
+            Eres mi estrella favorita en todo el universo."
+        </div>
+    </div>
+
+    <script>
+        // --- Interacciones (Botón Mágico) ---
+        function revealMessage(event) {
+            event.stopPropagation();
+            const msg = document.getElementById('secret-message');
+            const btn = document.getElementById('reveal-btn');
+            
+            if (msg.classList.contains('show')) {
+                msg.classList.remove('show');
+                btn.textContent = "Leer mi corazón";
+            } else {
+                msg.classList.add('show');
+                btn.textContent = "Ocultar mensaje";
+            }
+        }
+
+        // --- Canvas de Constelaciones ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let ambientStars = [];
+        let time = 0;
+        
+        // Coordenadas relativas del rostro de Hello Kitty (Centro: 0,0)
+        const kittyNodes = [
+            {id: 0, x: -60, y: -30}, // left ear inner
+            {id: 1, x: -80, y: -70}, // left ear tip
+            {id: 2, x: -95, y: -10}, // left ear outer
+            {id: 3, x: -100, y: 30}, // left cheek high
+            {id: 4, x: -70, y: 80},  // left cheek low
+            {id: 5, x: -30, y: 100}, // chin left
+            {id: 6, x: 30, y: 100},  // chin right
+            {id: 7, x: 70, y: 80},   // right cheek low
+            {id: 8, x: 100, y: 30},  // right cheek high
+            {id: 9, x: 95, y: -10},  // right ear outer
+            {id: 10, x: 80, y: -70}, // right ear tip
+            {id: 11, x: 60, y: -30}, // right ear inner
+            {id: 12, x: 30, y: -40}, // top head right
+            {id: 13, x: 0, y: -45},  // top head center
+            {id: 14, x: -30, y: -40},// top head left
+            
+            // Whiskers Left
+            {id: 15, x: -130, y: 10}, {id: 16, x: -95, y: 20}, // Top
+            {id: 17, x: -135, y: 40}, {id: 18, x: -95, y: 40}, // Mid
+            {id: 19, x: -125, y: 70}, {id: 20, x: -85, y: 60}, // Bot
+            
+            // Whiskers Right
+            {id: 21, x: 130, y: 10},  {id: 22, x: 95, y: 20},  // Top
+            {id: 23, x: 135, y: 40},  {id: 24, x: 95, y: 40},  // Mid
+            {id: 25, x: 125, y: 70},  {id: 26, x: 85, y: 60},  // Bot
+
+            // Eyes & Nose (Solo puntos, sin lineas)
+            {id: 27, x: -45, y: 35}, // L eye
+            {id: 28, x: 45, y: 35},  // R eye
+            {id: 29, x: 0, y: 55},   // Nose
+
+            // Bow (Right Ear)
+            {id: 30, x: 65, y: -55}, // Bow center
+            {id: 31, x: 45, y: -75}, // Bow loop L top
+            {id: 32, x: 40, y: -40}, // Bow loop L bot
+            {id: 33, x: 90, y: -70}, // Bow loop R top
+            {id: 34, x: 85, y: -35}, // Bow loop R bot
+        ];
+
+        const kittyEdges = [
+            // Outline
+            [0,1], [1,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,8], [8,9], [9,10], [10,11],
+            [11,12], [12,13], [13,14], [14,0],
+            // Whiskers
+            [15,16], [17,18], [19,20],
+            [21,22], [23,24], [25,26],
+            // Bow
+            [30,31], [31,32], [32,30],
+            [30,33], [33,34], [34,30]
+        ];
+
+        // Estado de la animación de las lineas
+        let lineProgress = 0; 
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        }
+        window.addEventListener('resize', resize);
+
+        class Star {
+            constructor(x, y, isConstellation = false, id = null) {
+                this.x = x;
+                this.y = y;
+                this.isConstellation = isConstellation;
+                this.id = id;
+                this.baseSize = isConstellation ? (Math.random() * 1.5 + 2) : (Math.random() * 1.5 + 0.5);
+                this.size = this.baseSize;
+                this.twinkleSpeed = Math.random() * 0.05 + 0.01;
+                this.twinklePhase = Math.random() * Math.PI * 2;
+                this.opacity = Math.random();
+            }
+            update() {
+                this.twinklePhase += this.twinkleSpeed;
+                this.opacity = (Math.sin(this.twinklePhase) + 1) / 2; // 0 to 1
+                
+                // Las estrellas de la constelación brillan más fuerte cuando se están dibujando
+                if (this.isConstellation && lineProgress > 0) {
+                    this.opacity = Math.max(0.6, this.opacity); 
+                    this.size = this.baseSize + (Math.sin(time * 0.1) * 0.5);
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                let alpha = this.isConstellation ? (0.4 + this.opacity * 0.6) : (this.opacity * 0.8);
+                ctx.fillStyle = this.isConstellation ? `rgba(255, 230, 255, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+                
+                if (this.isConstellation && window.innerWidth >= 768) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#d8b4fe';
+                }
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        let constellationStars = [];
+
+        function initStars() {
+            ambientStars = [];
+            constellationStars = [];
+            
+            // Ambient stars
+            const numStars = (width * height) / 4000;
+            for(let i=0; i<numStars; i++) {
+                ambientStars.push(new Star(Math.random() * width, Math.random() * height));
+            }
+
+            // Hello Kitty Constellation setup
+            const scale = window.innerWidth < 768 ? 1 : 1.8;
+            const centerX = width / 2;
+            const centerY = height / 2 - 50;
+
+            kittyNodes.forEach(node => {
+                const x = centerX + (node.x * scale);
+                const y = centerY + (node.y * scale);
+                const star = new Star(x, y, true, node.id);
+                ambientStars.push(star);
+                constellationStars.push(star);
+            });
+        }
+
+        function drawConstellationLines() {
+            if (lineProgress <= 0) return;
+            
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (window.innerWidth >= 768) {
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = '#d8b4fe';
+            }
+
+            const scale = window.innerWidth < 768 ? 1 : 1.8;
+            const centerX = width / 2;
+            const centerY = height / 2 - 50;
+
+            kittyEdges.forEach((edge, index) => {
+                // Dibujar progresivamente según el índice
+                const edgeThreshold = (index / kittyEdges.length);
+                if (lineProgress > edgeThreshold) {
+                    const progressOnThisLine = Math.min(1, (lineProgress - edgeThreshold) * kittyEdges.length);
+                    
+                    const nodeA = kittyNodes.find(n => n.id === edge[0]);
+                    const nodeB = kittyNodes.find(n => n.id === edge[1]);
+                    
+                    const x1 = centerX + (nodeA.x * scale);
+                    const y1 = centerY + (nodeA.y * scale);
+                    const x2 = centerX + (nodeB.x * scale);
+                    const y2 = centerY + (nodeB.y * scale);
+
+                    // Interpolate end point
+                    const currX = x1 + (x2 - x1) * progressOnThisLine;
+                    const currY = y1 + (y2 - y1) * progressOnThisLine;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(currX, currY);
+                    
+                    // Fade in effect
+                    const alpha = Math.min(0.6, lineProgress * 1.5);
+                    ctx.strokeStyle = `rgba(216, 180, 254, ${alpha})`;
+                    ctx.stroke();
+                }
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            time++;
+
+            // Reveal constellation slowly after a few seconds
+            if (time > 120 && lineProgress < 1.2) {
+                lineProgress += 0.003;
+            }
+
+            drawConstellationLines();
+
+            ambientStars.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        resize();
+        animate();
+    </script>
+</body>
+</html>

@@ -167,6 +167,7 @@
             animation: sway var(--speed) ease-in-out infinite alternate;
             animation-delay: var(--delay);
             transition: all 0.5s ease;
+            will-change: transform;
         }
 
         .flower.new-flower {
@@ -218,8 +219,9 @@
             position: relative;
             margin-bottom: -5px;
             z-index: 2;
-            filter: drop-shadow(0 0 20px var(--glow-color));
+            filter: drop-shadow(0 0 10px var(--glow-color)); /* Reduced blur radius for performance */
             animation: breathe 4s ease-in-out infinite alternate;
+            will-change: transform;
         }
 
         .petal {
@@ -496,8 +498,10 @@
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
-                ctx.shadowBlur = this.glow;
-                ctx.shadowColor = this.color;
+                if (window.innerWidth >= 768) {
+                    ctx.shadowBlur = this.glow;
+                    ctx.shadowColor = this.color;
+                }
                 ctx.fill();
                 ctx.shadowBlur = 0; // reset
             }
@@ -541,8 +545,10 @@
                 ctx.lineTo(this.x + Math.cos(this.angle) * this.length, this.y - Math.sin(this.angle) * this.length);
                 ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
                 ctx.lineWidth = 2;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = "white";
+                if (window.innerWidth >= 768) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "white";
+                }
                 ctx.stroke();
                 ctx.shadowBlur = 0;
             }
@@ -552,10 +558,14 @@
             particles = [];
             shootingStars = [new ShootingStar(), new ShootingStar()];
             
+            const isMobile = window.innerWidth < 768;
+            const numStars = isMobile ? 50 : 150;
+            const numFireflies = isMobile ? 20 : 60;
+            
             // Stars
-            for(let i=0; i<150; i++) particles.push(new Particle(false));
+            for(let i=0; i<numStars; i++) particles.push(new Particle(false));
             // Butterfly/Fireflies
-            for(let i=0; i<60; i++) particles.push(new Particle(true));
+            for(let i=0; i<numFireflies; i++) particles.push(new Particle(true));
         }
 
         function animateCanvas() {
@@ -658,7 +668,8 @@
         }
 
         // Flores iniciales
-        const numInitialFlowers = window.innerWidth < 768 ? 10 : 18;
+        const isMobile = window.innerWidth < 768;
+        const numInitialFlowers = isMobile ? 6 : 15;
         for (let i = 0; i < numInitialFlowers; i++) {
             createFlower(Math.random() * 100);
         }

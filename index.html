@@ -70,6 +70,8 @@
             text-align: center;
             max-width: 90%;
             width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -137,7 +139,8 @@
         }
 
         .hidden-message.show {
-            max-height: 500px;
+            max-height: 50vh;
+            overflow-y: auto;
             opacity: 1;
             margin-top: 25px;
             padding-top: 20px;
@@ -303,7 +306,7 @@
                 font-size: 1rem;
             }
             .hidden-message.show {
-                max-height: 600px;
+                max-height: 50vh;
             }
             h1 {
                 font-size: 2.2rem;
@@ -334,7 +337,7 @@
                 line-height: 1.4;
             }
             .hidden-message.show {
-                max-height: 800px; /* Allow more space for wrapped text on narrow screens */
+                max-height: 60vh; /* Allow more space for wrapped text on narrow screens */
                 margin-top: 15px;
                 padding-top: 15px;
             }
@@ -597,8 +600,11 @@
             
             // Random properties
             const colorPair = palettes[Math.floor(Math.random() * palettes.length)];
-            const size = Math.random() * 40 + 60; // 60 to 100px
-            const stemHeight = Math.random() * 150 + 100; // 100 to 250px
+            const isMobile = window.innerWidth < 768;
+            const sizeMultiplier = isMobile ? 0.6 : 1;
+            
+            const size = (Math.random() * 40 + 60) * sizeMultiplier; // 60 to 100px (scaled)
+            const stemHeight = (Math.random() * 150 + 100) * sizeMultiplier; // 100 to 250px (scaled)
             const delay = Math.random() * -5;
             const speed = Math.random() * 3 + 4; // 4 to 7s
             const tilt = (Math.random() - 0.5) * 20; // -10 to 10deg
